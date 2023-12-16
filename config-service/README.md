@@ -1,0 +1,1 @@
+# Example of a Spring Cloud Config Server with git backend
