@@ -1,8 +1,28 @@
 version: "3.8"
 services:
+  edge-service:
+    image: "edge-service"
+    container_name: "edge-service"
+    ports:
+      - "9000:9000"
+    environment:
+      - BPL_JVM_THREAD_COUNT=50
+      - BPL_DEBUG_ENABLED=true
+      #- BPL_DEBUG_SUSPEND=true
+  config-service:
+    image: "config-service"
+    container_name: "config-service"
+    ports:
+      - "8888:8888"
+    environment:
+      - BPL_JVM_THREAD_COUNT=50
+      - BPL_DEBUG_ENABLED=true
+      #- BPL_DEBUG_SUSPEND=true
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://github.com/stevanovicmarko/spring-cloud-k8s
   catalog-service:
     depends_on:
       - polar-postgres
+      - config-service
     image: "catalog-service"
     container_name: "catalog-service"
     ports:
@@ -12,12 +32,14 @@ services:
       - BPL_JVM_THREAD_COUNT=50
       - BPL_DEBUG_ENABLED=true
       #- BPL_DEBUG_SUSPEND=true
+      - SPRING_CLOUD_CONFIG_URI=http://config-service:8888
       - SPRING_DATASOURCE_URL=jdbc:postgresql://polar-postgres:5432/polardb_catalog
      # - SPRING_PROFILES_ACTIVE=testdata
 
   order-service:
     depends_on:
       - polar-postgres
+      - config-service
     image: "order-service"
     container_name: "order-service"
     ports:
@@ -29,18 +51,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://polar-postgres:5432/polardb_order
      # - SPRING_PROFILES_ACTIVE=testdata
 
-  edge-service:
-    image: "edge-service"
-    container_name: "edge-service"
-    ports:
-      - "9000:9080"
-    environment:
-      - BPL_JVM_THREAD_COUNT=50
-      - BPL_DEBUG_ENABLED=true
-      #- BPL_DEBUG_SUSPEND=true
-
   # Backing Services
-
   polar-postgres:
     image: "postgres:14.4"
     container_name: "polar-postgres"
